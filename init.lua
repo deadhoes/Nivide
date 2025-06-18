@@ -11,23 +11,35 @@ local RunService = game:GetService("RunService")
 -- Nvidia-style default configuration
 local CONFIG = {
     Duration = 5,
-    Position = UDim2.new(1, -20, 0, 20),
+    Position = UDim2.new(1, -20, 0, 20),  -- Top right position
     Size = UDim2.new(0, 350, 0, 80),
-    BackgroundColor = Color3.fromRGB(36, 36, 36),  -- Dark gray background
-    TextColor = Color3.fromRGB(255, 255, 255),     -- White text
-    AccentColor = Color3.fromRGB(118, 185, 0),     -- Nvidia green accent
-    Font = Enum.Font.GothamBold,
+    BackgroundColor = Color3.fromRGB(0, 0, 0),  -- Pure black background (more Nvidia-like)
+    TextColor = Color3.fromRGB(255, 255, 255),  -- White text
+    AccentColor = Color3.fromRGB(118, 185, 0),  -- Classic Nvidia green
+    Font = Enum.Font.GothamBold,  -- Clean, modern font like Nvidia uses
     TextSize = 16,
-    CornerRadius = UDim.new(0, 6),
+    CornerRadius = UDim.new(0, 4),  -- Slightly sharper corners (Nvidia style)
+    BorderSizePixel = 1,
+    BorderColor3 = Color3.fromRGB(50, 50, 50),  -- Subtle border
+    Icon = "rbxassetid://1234567890",  -- Replace with Nvidia logo asset ID
+    IconSize = UDim2.new(0, 24, 0, 24),
+    IconColor = Color3.fromRGB(118, 185, 0),  -- Green icon
     ParticleConfig = {
         Enabled = true,
-        Count = 40,
+        Count = 50,  -- More particles for Nvidia effect
         MinSize = 1,
         MaxSize = 3,
-        MinSpeed = 3,
-        MaxSpeed = 6,
-        FadeTime = 1,
-        ParticleColor = Color3.fromRGB(118, 185, 0)  -- Nvidia green particles
+        MinSpeed = 5,  -- Faster particles
+        MaxSpeed = 10,
+        FadeTime = 0.8,  -- Slightly quicker fade
+        ParticleColor = Color3.fromRGB(118, 185, 0),  -- Nvidia green particles
+        SpreadAngle = 45,  -- Wider spread
+        Gravity = Vector2.new(0, 50)  -- Particles fall downward
+    },
+    Animation = {
+        SlideInDuration = 0.3,  -- Smooth slide-in
+        SlideOutDuration = 0.3,  -- Smooth slide-out
+        BounceEffect = false  -- Nvidia notifications don't typically bounce
     }
 }
 
