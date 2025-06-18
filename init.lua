@@ -1,6 +1,5 @@
--- NivideNotifications v1.1
--- By: YourName
--- Description: A customizable notification system for Roblox games
+-- NivideNotifications v1.2 (Nvidia Theme)
+-- Original Nvidia-style notification system for Roblox
 
 local NivideNotifications = {}
 
@@ -9,25 +8,26 @@ local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
--- Default configuration
+-- Nvidia-style default configuration
 local CONFIG = {
     Duration = 5,
     Position = UDim2.new(1, -20, 0, 20),
-    Size = UDim2.new(0, 350, 0, 70),
-    BackgroundColor = Color3.fromRGB(40, 40, 40),
-    TextColor = Color3.fromRGB(255, 255, 255),
-    AccentColor = Color3.fromRGB(0, 162, 255),
+    Size = UDim2.new(0, 350, 0, 80),
+    BackgroundColor = Color3.fromRGB(36, 36, 36),  -- Dark gray background
+    TextColor = Color3.fromRGB(255, 255, 255),     -- White text
+    AccentColor = Color3.fromRGB(118, 185, 0),     -- Nvidia green accent
     Font = Enum.Font.GothamBold,
     TextSize = 16,
-    CornerRadius = UDim.new(0, 8),
+    CornerRadius = UDim.new(0, 6),
     ParticleConfig = {
         Enabled = true,
-        Count = 50,
+        Count = 40,
         MinSize = 1,
-        MaxSize = 2,
-        MinSpeed = 4,
-        MaxSpeed = 7,
-        FadeTime = 1
+        MaxSize = 3,
+        MinSpeed = 3,
+        MaxSpeed = 6,
+        FadeTime = 1,
+        ParticleColor = Color3.fromRGB(118, 185, 0)  -- Nvidia green particles
     }
 }
 
@@ -37,15 +37,15 @@ ScreenGui.Name = "NivideNotificationGui"
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = game:GetService("CoreGui")
 
--- Helper function to create glow effect
-local function createGlow(parent, color, size, transparency)
+-- Helper function to create Nvidia-style glow
+local function createNvidiaGlow(parent, color, size, transparency)
     local glow = Instance.new("ImageLabel")
-    glow.Name = "Glow"
+    glow.Name = "NvidiaGlow"
     glow.BackgroundTransparency = 1
     glow.Image = "rbxassetid://7131988516"
     glow.ImageColor3 = color
-    glow.ImageTransparency = transparency or 0.7
-    glow.Size = size or UDim2.new(1.5, 0, 1.5, 0)
+    glow.ImageTransparency = transparency or 0.85
+    glow.Size = size or UDim2.new(1.2, 0, 1.5, 0)
     glow.SizeConstraint = Enum.SizeConstraint.RelativeXX
     glow.Position = UDim2.new(0.5, 0, 0.5, 0)
     glow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -54,18 +54,17 @@ local function createGlow(parent, color, size, transparency)
     return glow
 end
 
--- Particle system for background
-local function createParticle(container, config)
+-- Nvidia-style particle system
+local function createNvidiaParticle(container, config)
     local particle = Instance.new("Frame")
-    particle.BackgroundTransparency = 0.5
-    particle.BackgroundColor3 = config.AccentColor
+    particle.BackgroundColor3 = config.ParticleConfig.ParticleColor
     particle.BorderSizePixel = 0
     
     local size = math.random(config.ParticleConfig.MinSize, config.ParticleConfig.MaxSize)
     particle.Size = UDim2.new(0, size, 0, size)
     particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
     
-    local glow = createGlow(particle, config.AccentColor, UDim2.new(2, 0, 2, 0), 0.8)
+    local glow = createNvidiaGlow(particle, config.ParticleConfig.ParticleColor, UDim2.new(2, 0, 2, 0), 0.8)
     Instance.new("UICorner", particle).CornerRadius = UDim.new(1, 0)
     particle.ZIndex = container.ZIndex
     particle.Parent = container
@@ -103,35 +102,35 @@ local function createParticle(container, config)
     end)
 end
 
--- Create animated background
-local function createAnimatedBackground(parent, config)
+-- Create Nvidia-style animated background
+local function createNvidiaBackground(parent, config)
     if not config.ParticleConfig.Enabled then return end
     
     local backgroundContainer = Instance.new("Frame")
-    backgroundContainer.Name = "AnimatedBackground"
+    backgroundContainer.Name = "NvidiaBackground"
     backgroundContainer.Size = UDim2.new(1, 0, 1, 0)
     backgroundContainer.BackgroundTransparency = 1
     backgroundContainer.ZIndex = parent.ZIndex - 1
     backgroundContainer.Parent = parent
     
     for _ = 1, config.ParticleConfig.Count do
-        createParticle(backgroundContainer, config)
+        createNvidiaParticle(backgroundContainer, config)
     end
     
-    -- Continuous particle generation
+    -- Continuous Nvidia-style particle generation
     spawn(function()
         while backgroundContainer.Parent do
-            task.wait(0.2)
+            task.wait(0.25)
             if #backgroundContainer:GetChildren() < config.ParticleConfig.Count * 1.5 then
-                createParticle(backgroundContainer, config)
+                createNvidiaParticle(backgroundContainer, config)
             end
         end
     end)
 end
 
--- Main notification function
+-- Main notification function with Nvidia style
 function NivideNotifications.CreateNotification(title, message, customConfig)
-    -- Merge custom config with defaults
+    -- Merge custom config with Nvidia defaults
     local config = table.clone(CONFIG)
     if customConfig then
         for k, v in pairs(customConfig) do
@@ -145,29 +144,29 @@ function NivideNotifications.CreateNotification(title, message, customConfig)
         end
     end
     
-    -- Create notification frame
+    -- Create notification frame with Nvidia styling
     local notification = Instance.new("Frame")
-    notification.Name = "Notification_"..HttpService:GenerateGUID(false)
+    notification.Name = "NvidiaNotification_"..HttpService:GenerateGUID(false)
     notification.Size = config.Size
     notification.Position = UDim2.new(1, 20, 0, config.Position.Y.Offset)
     notification.AnchorPoint = Vector2.new(1, 0)
     notification.BackgroundColor3 = config.BackgroundColor
-    notification.BackgroundTransparency = 0.2
+    notification.BackgroundTransparency = 0.15
     notification.BorderSizePixel = 0
     notification.ClipsDescendants = true
     notification.ZIndex = 100
     notification.Parent = ScreenGui
     
-    -- Add rounded corners
+    -- Nvidia-style rounded corners
     local corner = Instance.new("UICorner", notification)
     corner.CornerRadius = config.CornerRadius
     
-    -- Create shadow effect
+    -- Nvidia-style subtle shadow
     local shadow = Instance.new("ImageLabel", notification)
-    shadow.Name = "Shadow"
+    shadow.Name = "NvidiaShadow"
     shadow.Image = "rbxassetid://1316045217"
     shadow.ImageColor3 = Color3.new(0, 0, 0)
-    shadow.ImageTransparency = 0.8
+    shadow.ImageTransparency = 0.9
     shadow.ScaleType = Enum.ScaleType.Slice
     shadow.SliceCenter = Rect.new(10, 10, 118, 118)
     shadow.Size = UDim2.new(1, 10, 1, 10)
@@ -175,15 +174,14 @@ function NivideNotifications.CreateNotification(title, message, customConfig)
     shadow.ZIndex = notification.ZIndex - 1
     shadow.BackgroundTransparency = 1
     
-    -- Create animated background
-    createAnimatedBackground(notification, config)
+    -- Create Nvidia-style animated background
+    createNvidiaBackground(notification, config)
     
-    -- Create accent bar
+    -- Nvidia-style accent bar (full width initially)
     local accentBar = Instance.new("Frame")
-    accentBar.Name = "AccentBar"
-    accentBar.Size = UDim2.new(1, 0, 1, 0)
+    accentBar.Name = "NvidiaAccentBar"
+    accentBar.Size = UDim2.new(1, 0, 0, 3)  -- Nvidia-style thin bar
     accentBar.Position = UDim2.new(0, 0, 0, 0)
-    accentBar.BackgroundTransparency = 0.7
     accentBar.BackgroundColor3 = config.AccentColor
     accentBar.BorderSizePixel = 0
     accentBar.ZIndex = notification.ZIndex + 1
@@ -191,17 +189,17 @@ function NivideNotifications.CreateNotification(title, message, customConfig)
     
     -- Create content container
     local contentContainer = Instance.new("Frame")
-    contentContainer.Name = "ContentContainer"
+    contentContainer.Name = "NvidiaContent"
     contentContainer.Size = UDim2.new(1, -20, 1, -20)
     contentContainer.Position = UDim2.new(0, 10, 0, 10)
     contentContainer.BackgroundTransparency = 1
     contentContainer.ZIndex = notification.ZIndex + 2
     contentContainer.Parent = notification
     
-    -- Create title label
+    -- Create title label with Nvidia-style text
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "Title"
-    titleLabel.Size = UDim2.new(1, 0, 0, 20)
+    titleLabel.Name = "NvidiaTitle"
+    titleLabel.Size = UDim2.new(1, 0, 0, 24)
     titleLabel.Position = UDim2.new(0, 0, 0, 0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Font = config.Font
@@ -215,11 +213,11 @@ function NivideNotifications.CreateNotification(title, message, customConfig)
     
     -- Create message label
     local messageLabel = Instance.new("TextLabel")
-    messageLabel.Name = "Message"
-    messageLabel.Size = UDim2.new(1, 0, 1, -25)
-    messageLabel.Position = UDim2.new(0, 0, 0, 25)
+    messageLabel.Name = "NvidiaMessage"
+    messageLabel.Size = UDim2.new(1, 0, 1, -30)
+    messageLabel.Position = UDim2.new(0, 0, 0, 30)
     messageLabel.BackgroundTransparency = 1
-    messageLabel.Font = config.Font
+    messageLabel.Font = Enum.Font.Gotham  -- Slightly different font for message
     messageLabel.TextSize = config.TextSize - 2
     messageLabel.TextColor3 = config.TextColor
     messageLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -230,18 +228,7 @@ function NivideNotifications.CreateNotification(title, message, customConfig)
     messageLabel.ZIndex = contentContainer.ZIndex
     messageLabel.Parent = contentContainer
     
-    -- Create fixed accent bar (for after animation)
-    local fixedAccentBar = Instance.new("Frame")
-    fixedAccentBar.Name = "FixedAccentBar"
-    fixedAccentBar.Size = UDim2.new(0, 4, 1, 0)
-    fixedAccentBar.Position = UDim2.new(0, 0, 0, 0)
-    fixedAccentBar.BackgroundColor3 = config.AccentColor
-    fixedAccentBar.BorderSizePixel = 0
-    fixedAccentBar.Visible = false
-    fixedAccentBar.ZIndex = notification.ZIndex + 1
-    fixedAccentBar.Parent = notification
-    
-    -- Animation sequence
+    -- Nvidia-style animation sequence
     local function animate()
         -- Slide in animation
         local enterTween = TweenService:Create(notification, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
@@ -250,30 +237,15 @@ function NivideNotifications.CreateNotification(title, message, customConfig)
         enterTween:Play()
         enterTween.Completed:Wait()
         
-        task.wait(0.2)
-        
-        -- Convert full-width accent bar to thin bar
-        fixedAccentBar.Visible = true
-        local accentTween = TweenService:Create(accentBar, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
-            Size = UDim2.new(0, 4, 1, 0),
-            BackgroundTransparency = 0
-        })
-        accentTween:Play()
-        
-        task.wait(0.2)
-        
-        -- Fade in text
-        local textTween1 = TweenService:Create(titleLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        -- Fade in text (Nvidia-style quick fade)
+        local textTween1 = TweenService:Create(titleLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             TextTransparency = 0
         })   
-        local textTween2 = TweenService:Create(messageLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        local textTween2 = TweenService:Create(messageLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             TextTransparency = 0.2
         })
         textTween1:Play()
         textTween2:Play()
-        
-        accentTween.Completed:Wait()
-        accentBar:Destroy()
         
         -- Wait for duration
         task.wait(config.Duration)
@@ -290,12 +262,6 @@ function NivideNotifications.CreateNotification(title, message, customConfig)
     
     -- Start animation
     task.spawn(animate)
-end
-
--- Add queue system for multiple notifications
-function NivideNotifications.CreateQueuedNotification(title, message, customConfig)
-    -- Implementation for queued notifications
-    -- (Would track positions and auto-adjust for multiple notifications)
 end
 
 return NivideNotifications
