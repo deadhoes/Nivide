@@ -1,233 +1,156 @@
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-
 local NotificationLib = {}
-NotificationLib.__index = NotificationLib
 
-NotificationLib.Styles = {
-    Pixel = {
-        DefaultDuration = 4,
-        Size = UDim2.new(0, 320, 0, 80),
-        Position = UDim2.new(1, -10, 0, 10),
-        BackgroundColor = Color3.fromRGB(40, 40, 45),
-        BackgroundTransparency = 0,
-        TextColor = Color3.fromRGB(255, 255, 255),
-        AccentColor = Color3.fromRGB(100, 200, 100),
-        Font = Enum.Font.SciFi,
-        TitleSize = 16,
-        DescriptionSize = 14,
-        CornerRadius = 0,
-        BorderSize = 2,
-        BorderColor = Color3.fromRGB(80, 80, 80),
-        IconSize = 20,
-        IconColor = Color3.fromRGB(255, 255, 255),
-        StackSpacing = 8,
-        PixelEffect = true
-    },
-    Classic = {
-        DefaultDuration = 5,
-        Size = UDim2.new(0, 350, 0, 90),
-        Position = UDim2.new(1, -20, 0, 20),
-        BackgroundColor = Color3.fromRGB(60, 60, 70),
-        BackgroundTransparency = 0.1,
-        TextColor = Color3.fromRGB(240, 240, 240),
-        AccentColor = Color3.fromRGB(0, 120, 215),
-        Font = Enum.Font.SourceSansBold,
-        TitleSize = 18,
-        DescriptionSize = 14,
-        CornerRadius = 4,
-        BorderSize = 1,
-        BorderColor = Color3.fromRGB(100, 100, 110),
-        IconSize = 24,
-        StackSpacing = 10
-    },
-    Nvidia = {
-        DefaultDuration = 4,
-        Size = UDim2.new(0, 380, 0, 100),
-        Position = UDim2.new(1, -25, 0, 25),
-        BackgroundColor = Color3.fromRGB(20, 20, 25),
-        BackgroundTransparency = 0.15,
-        TextColor = Color3.fromRGB(230, 230, 230),
-        AccentColor = Color3.fromRGB(118, 185, 0),
-        Font = Enum.Font.GothamBold,
-        TitleSize = 18,
-        DescriptionSize = 15,
-        CornerRadius = 8,
-        BorderSize = 1,
-        BorderColor = Color3.fromRGB(60, 60, 70),
-        IconSize = 28,
-        IconColor = Color3.fromRGB(118, 185, 0),
-        StackSpacing = 12,
-        GlowEffect = true,
-        ParticleEffect = true
-    }
+-- Default settings
+NotificationLib.defaultSettings = {
+    duration = 5, -- seconds
+    titleColor = Color3.fromRGB(40, 40, 40),
+    descColor = Color3.fromRGB(120, 120, 120),
+    bgColor = Color3.fromRGB(255, 255, 255),
+    timerColor = Color3.fromRGB(110, 158, 246),
+    position = UDim2.new(0.248, 0, 0.25, 0),
+    size = UDim2.new(0, 222, 0, 102),
+    titleFont = Enum.Font.Unknown,
+    descFont = Enum.Font.Unknown,
+    titleSize = 16,
+    descSize = 14
 }
 
-function NotificationLib.Init()
-    local self = setmetatable({}, NotificationLib)
-    self.ScreenGui = Instance.new("ScreenGui")
-    self.ScreenGui.Name = "NotificationSystem"
-    self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    self.ScreenGui.Parent = game:GetService("CoreGui")
-    self.ActiveNotifications = {}
-    return self
-end
-
-local function createPixelEffect(frame)
-    local pixelGrid = Instance.new("Frame")
-    pixelGrid.Size = UDim2.new(1, 0, 1, 0)
-    pixelGrid.BackgroundTransparency = 1
-    pixelGrid.Parent = frame
+-- Create a new notification
+function NotificationLib.new(settings)
+    -- Merge custom settings with defaults
+    local config = table.clone(NotificationLib.defaultSettings)
+    for k, v in pairs(settings or {}) do
+        config[k] = v
+    end
     
-    for i = 0, 15 do
-        for j = 0, 9 do
-            local pixel = Instance.new("Frame")
-            pixel.Size = UDim2.new(0, 20, 0, 8)
-            pixel.Position = UDim2.new(0, i * 20, 0, j * 8)
-            pixel.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-            pixel.BorderSizePixel = 0
-            pixel.Parent = pixelGrid
-        end
-    end
-end
-
-local function createGlowEffect(frame, color)
-    local glow = Instance.new("ImageLabel")
-    glow.Name = "GlowEffect"
-    glow.Size = UDim2.new(1.5, 0, 1.5, 0)
-    glow.Position = UDim2.new(0.5, 0, 0.5, 0)
-    glow.AnchorPoint = Vector2.new(0.5, 0.5)
-    glow.BackgroundTransparency = 1
-    glow.Image = "rbxassetid://7131988516"
-    glow.ImageColor3 = color
-    glow.ImageTransparency = 0.8
-    glow.ZIndex = -1
-    glow.Parent = frame
-    return glow
-end
-
-function NotificationLib:AddNotification(options)
-    local style = options.Style or "Classic"
-    local config = table.clone(NotificationLib.Styles[style] or NotificationLib.Styles.Classic)
+    -- Create GUI elements
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     
-    -- Apply custom duration or use style default
-    config.Duration = options.Duration or config.DefaultDuration
+    local mainFrame = Instance.new("Frame")
+    mainFrame.BackgroundColor3 = config.bgColor
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Position = config.position
+    mainFrame.Size = config.size
+    mainFrame.Parent = screenGui
     
-    for k,v in pairs(options) do
-        if k ~= "Style" and k ~= "Duration" then
-            config[k] = v
-        end
-    end
-
-    local notification = Instance.new("Frame")
-    notification.Size = config.Size
-    notification.Position = UDim2.new(1, 20, 0, config.Position.Y.Offset)
-    notification.AnchorPoint = Vector2.new(1, 0)
-    notification.BackgroundColor3 = config.BackgroundColor
-    notification.BackgroundTransparency = config.BackgroundTransparency
-    notification.BorderSizePixel = config.BorderSize
-    notification.BorderColor3 = config.BorderColor
-    notification.Parent = self.ScreenGui
-
-    if config.CornerRadius > 0 then
-        local uICorner = Instance.new("UICorner")
-        uICorner.CornerRadius = UDim.new(0, config.CornerRadius)
-        uICorner.Parent = notification
-    end
-
-    if config.PixelEffect then
-        createPixelEffect(notification)
-    end
-
-    if config.GlowEffect then
-        createGlowEffect(notification, config.AccentColor)
-    end
-
-    local accentBar = Instance.new("Frame")
-    accentBar.Size = UDim2.new(0, 4, 1, 0)
-    accentBar.BackgroundColor3 = config.AccentColor
-    accentBar.BorderSizePixel = 0
-    accentBar.Parent = notification
-
-    if config.Icon then
-        local icon = Instance.new("ImageLabel")
-        icon.Size = UDim2.new(0, config.IconSize, 0, config.IconSize)
-        icon.Position = UDim2.new(0, 15, 0.5, 0)
-        icon.AnchorPoint = Vector2.new(0, 0.5)
-        icon.BackgroundTransparency = 1
-        icon.Image = "rbxassetid://"..config.Icon
-        icon.ImageColor3 = config.IconColor or config.TextColor
-        icon.Parent = notification
-    end
-
-    local content = Instance.new("Frame")
-    content.Size = config.Icon and UDim2.new(1, -(config.IconSize + 30), 1, 0) or UDim2.new(1, -20, 1, 0)
-    content.Position = config.Icon and UDim2.new(0, config.IconSize + 25, 0, 0) or UDim2.new(0, 15, 0, 0)
-    content.BackgroundTransparency = 1
-    content.Parent = notification
-
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, 0, 0, 30)
-    title.Position = UDim2.new(0, 0, 0, 10)
-    title.BackgroundTransparency = 1
-    title.Font = config.Font
-    title.TextSize = config.TitleSize
-    title.TextColor3 = config.TextColor
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Text = options.Title or "Notification"
-    title.TextTransparency = 1
-    title.Parent = content
-
-    local description = Instance.new("TextLabel")
-    description.Size = UDim2.new(1, 0, 1, -40)
-    description.Position = UDim2.new(0, 0, 0, 35)
-    description.BackgroundTransparency = 1
-    description.Font = config.Font
-    description.TextSize = config.DescriptionSize
-    description.TextColor3 = config.TextColor
-    description.TextXAlignment = Enum.TextXAlignment.Left
-    description.TextYAlignment = Enum.TextYAlignment.Top
-    description.Text = options.Description or ""
-    description.TextWrapped = true
-    description.TextTransparency = 1
-    description.Parent = content
-
-    local totalHeight = 0
-    for _, notif in ipairs(self.ActiveNotifications) do
-        totalHeight += notif.Size.Y.Offset + config.StackSpacing
-    end
-    table.insert(self.ActiveNotifications, notification)
-
-    local function animate()
-        local enterTween = TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
-            Position = UDim2.new(1, -config.Position.X.Offset, 0, config.Position.Y.Offset + totalHeight)
-        })
-        enterTween:Play()
-        
-        task.wait(0.2)
-        
-        TweenService:Create(title, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
-        TweenService:Create(description, TweenInfo.new(0.3), {TextTransparency = style == "Pixel" and 0 or 0.2}):Play()
-        
-        task.wait(config.Duration)
-        
-        local exitTween = TweenService:Create(notification, TweenInfo.new(0.3), {
-            Position = UDim2.new(1, 20, 0, config.Position.Y.Offset + totalHeight)
-        })
-        exitTween:Play()
-        exitTween.Completed:Wait()
-        
-        for i, notif in ipairs(self.ActiveNotifications) do
-            if notif == notification then
-                table.remove(self.ActiveNotifications, i)
-                break
+    local contentFrame = Instance.new("Frame")
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.BorderSizePixel = 0
+    contentFrame.Position = UDim2.new(0, 15, 0, 0)
+    contentFrame.Size = UDim2.new(1, -25, 1, 0)
+    contentFrame.ZIndex = 2
+    contentFrame.Parent = mainFrame
+    
+    local layout = Instance.new("UIListLayout")
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.VerticalAlignment = Enum.VerticalAlignment.Center
+    layout.Parent = contentFrame
+    
+    local padding = Instance.new("UIPadding")
+    padding.PaddingBottom = UDim.new(0, 16)
+    padding.PaddingTop = UDim.new(0, 16)
+    padding.Parent = contentFrame
+    
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "Title"
+    titleLabel.AnchorPoint = Vector2.new(0.5, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Size = UDim2.new(1, 0, 0, 10)
+    titleLabel.ZIndex = 2
+    titleLabel.Font = config.titleFont
+    titleLabel.Text = config.title or "Title"
+    titleLabel.TextColor3 = config.titleColor
+    titleLabel.TextSize = config.titleSize
+    titleLabel.TextWrapped = true
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = contentFrame
+    
+    local descLabel = Instance.new("TextLabel")
+    descLabel.Name = "Description"
+    descLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+    descLabel.BackgroundTransparency = 1
+    descLabel.Size = UDim2.new(1, 0, 0, 5)
+    descLabel.ZIndex = 2
+    descLabel.Font = config.descFont
+    descLabel.Text = config.description or "Description"
+    descLabel.TextColor3 = config.descColor
+    descLabel.TextSize = config.descSize
+    descLabel.TextTransparency = 0.15
+    descLabel.TextWrapped = true
+    descLabel.TextXAlignment = Enum.TextXAlignment.Left
+    descLabel.TextYAlignment = Enum.TextYAlignment.Top
+    descLabel.Parent = contentFrame
+    
+    local timerBar = Instance.new("Frame")
+    timerBar.Name = "Timer"
+    timerBar.BackgroundColor3 = config.timerColor
+    timerBar.BorderSizePixel = 0
+    timerBar.Position = UDim2.new(0, 0, 1, -2)
+    timerBar.Size = UDim2.new(1, 0, 0, 2)
+    timerBar.ZIndex = 2
+    timerBar.Parent = mainFrame
+    
+    local interactButton = Instance.new("TextButton")
+    interactButton.Name = "Interact"
+    interactButton.AnchorPoint = Vector2.new(0.5, 0.5)
+    interactButton.BackgroundTransparency = 1
+    interactButton.BorderSizePixel = 0
+    interactButton.Size = UDim2.new(1, 0, 1, 0)
+    interactButton.ZIndex = 5
+    interactButton.Font = Enum.Font.SourceSans
+    interactButton.Text = ""
+    interactButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+    interactButton.TextSize = 14
+    interactButton.Parent = mainFrame
+    
+    -- Animation for timer
+    if config.duration and config.duration > 0 then
+        spawn(function()
+            local startTime = tick()
+            local endTime = startTime + config.duration
+            
+            while tick() < endTime do
+                local elapsed = tick() - startTime
+                local progress = elapsed / config.duration
+                timerBar.Size = UDim2.new(1 - progress, 0, 0, 2)
+                wait()
             end
-        end
-        
-        notification:Destroy()
+            
+            -- Fade out animation
+            for i = 1, 10 do
+                mainFrame.BackgroundTransparency = i/10
+                wait(0.05)
+            end
+            
+            screenGui:Destroy()
+        end)
     end
     
-    task.spawn(animate)
+    -- Return methods to interact with the notification
+    return {
+        -- Destroy the notification immediately
+        destroy = function()
+            screenGui:Destroy()
+        end,
+        
+        -- Set a callback for when the notification is clicked
+        setCallback = function(callback)
+            interactButton.MouseButton1Click:Connect(callback)
+        end,
+        
+        -- Update the notification text
+        update = function(newTitle, newDesc)
+            if newTitle then titleLabel.Text = newTitle end
+            if newDesc then descLabel.Text = newDesc end
+        end,
+        
+        -- Get the GUI instance (for advanced modifications)
+        getGui = function()
+            return screenGui
+        end
+    }
 end
 
 return NotificationLib
