@@ -6,7 +6,7 @@ NotificationLib.__index = NotificationLib
 
 NotificationLib.Styles = {
     Pixel = {
-        Duration = 4,
+        DefaultDuration = 4,
         Size = UDim2.new(0, 320, 0, 80),
         Position = UDim2.new(1, -10, 0, 10),
         BackgroundColor = Color3.fromRGB(40, 40, 45),
@@ -25,7 +25,7 @@ NotificationLib.Styles = {
         PixelEffect = true
     },
     Classic = {
-        Duration = 5,
+        DefaultDuration = 5,
         Size = UDim2.new(0, 350, 0, 90),
         Position = UDim2.new(1, -20, 0, 20),
         BackgroundColor = Color3.fromRGB(60, 60, 70),
@@ -42,7 +42,7 @@ NotificationLib.Styles = {
         StackSpacing = 10
     },
     Nvidia = {
-        Duration = 4,
+        DefaultDuration = 4,
         Size = UDim2.new(0, 380, 0, 100),
         Position = UDim2.new(1, -25, 0, 25),
         BackgroundColor = Color3.fromRGB(20, 20, 25),
@@ -110,8 +110,11 @@ function NotificationLib:AddNotification(options)
     local style = options.Style or "Classic"
     local config = table.clone(NotificationLib.Styles[style] or NotificationLib.Styles.Classic)
     
+    -- Apply custom duration or use style default
+    config.Duration = options.Duration or config.DefaultDuration
+    
     for k,v in pairs(options) do
-        if k ~= "Style" then
+        if k ~= "Style" and k ~= "Duration" then
             config[k] = v
         end
     end
