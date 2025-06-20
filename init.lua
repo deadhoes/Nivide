@@ -4,211 +4,107 @@ local RunService = game:GetService("RunService")
 local NotificationLib = {}
 NotificationLib.__index = NotificationLib
 
-NotificationLib.DefaultConfig = {
-    Duration = 5,
-    Position = UDim2.new(1, -20, 0, 20),
-    Size = UDim2.new(0, 350, 0, 70),
-    BackgroundColor = Color3.fromRGB(0, 0, 0),
-    BackgroundTransparency = 0.1,
-    TextColor = Color3.fromRGB(255, 255, 255),
-    AccentColor = Color3.fromRGB(118, 185, 0),
-    Font = Enum.Font.GothamBold,
-    TitleSize = 16,
-    MessageSize = 14,
-    ParticleConfig = {
-        Enabled = true,
-        Count = 50,
-        MinSize = 1,
-        MaxSize = 3,
-        MinSpeed = 4,
-        MaxSpeed = 7,
-        FadeTime = 1
+NotificationLib.Styles = {
+    Modern = {
+        Duration = 4,
+        Size = UDim2.new(0, 360, 0, 90),
+        Position = UDim2.new(1, -20, 0, 20),
+        BackgroundColor = Color3.fromRGB(25, 25, 30),
+        BackgroundTransparency = 0.1,
+        TextColor = Color3.fromRGB(240, 240, 240),
+        AccentColor = Color3.fromRGB(0, 162, 255),
+        Font = Enum.Font.GothamSemibold,
+        TitleSize = 18,
+        DescriptionSize = 14,
+        CornerRadius = 8,
+        BorderSize = 1,
+        BorderColor = Color3.fromRGB(60, 60, 70)
     }
 }
 
-function NotificationLib.Init(customConfig)
+function NotificationLib.Init()
     local self = setmetatable({}, NotificationLib)
-    
-    self.Config = table.clone(NotificationLib.DefaultConfig)
-    if customConfig then
-        for k, v in pairs(customConfig) do
-            self.Config[k] = v
-        end
-    end
-    
     self.ScreenGui = Instance.new("ScreenGui")
-    self.ScreenGui.Name = "NotificationGui"
+    self.ScreenGui.Name = "ModernNotificationGui"
     self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    self.ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-    
+    self.ScreenGui.Parent = game:GetService("CoreGui")
     self.NotificationQueue = {}
-    self.IsShowingNotification = false
-    
     return self
 end
 
-local function createGlow(parent, color, size, transparency)
-    local glow = Instance.new("ImageLabel")
-    glow.Name = "Glow"
-    glow.BackgroundTransparency = 1
-    glow.Image = "rbxassetid://7131988516"
-    glow.ImageColor3 = color
-    glow.ImageTransparency = transparency
-    glow.Size = UDim2.new(1.5, 0, 1.5, 0)
-    glow.SizeConstraint = Enum.SizeConstraint.RelativeXX
-    glow.Position = UDim2.new(0.5, 0, 0.5, 0)
-    glow.AnchorPoint = Vector2.new(0.5, 0.5)
-    glow.ZIndex = parent.ZIndex - 1
-    glow.Parent = parent
-    return glow
-end
-
-local function createParticle(container, config)
-    local particle = Instance.new("Frame")
-    particle.BackgroundColor3 = config.AccentColor
-    particle.BorderSizePixel = 0
-    
-    local size = math.random(config.ParticleConfig.MinSize, config.ParticleConfig.MaxSize)
-    particle.Size = UDim2.new(0, size, 0, size)
-    particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
-    
-    local glow = createGlow(particle, config.AccentColor, size * 1.5, 0.7)
-    Instance.new("UICorner", particle).CornerRadius = UDim.new(1, 0)
-    particle.Parent = container
-    
-    local connection
-    connection = RunService.Heartbeat:Connect(function(deltaTime)
-        if not particle.Parent then
-            connection:Disconnect()
-            return
+function NotificationLib:AddNotification(options)
+    local config = table.clone(NotificationLib.Styles.Modern)
+    for k,v in pairs(options) do
+        if k ~= "Style" then
+            config[k] = v
         end
-        
-        local currentPos = particle.Position
-        particle.Position = UDim2.new(
-            currentPos.X.Scale, 
-            currentPos.X.Offset, 
-            currentPos.Y.Scale - deltaTime * 0.1, 
-            currentPos.Y.Offset
-        )
-        
-        particle.BackgroundTransparency = particle.BackgroundTransparency + deltaTime * 0.5
-        glow.ImageTransparency = glow.ImageTransparency + deltaTime * 0.5
-        
-        if particle.BackgroundTransparency >= 1 then
-            particle:Destroy()
-            connection:Disconnect()
-        end
-    end)
-end
-
-local function createAnimatedBackground(parent, config)
-    if not config.ParticleConfig.Enabled then return end
-    
-    local backgroundContainer = Instance.new("Frame")
-    backgroundContainer.Name = "AnimatedBackground"
-    backgroundContainer.Size = UDim2.new(1, 0, 1, 0)
-    backgroundContainer.BackgroundTransparency = 1
-    backgroundContainer.ZIndex = 0
-    backgroundContainer.Parent = parent
-    
-    for _ = 1, config.ParticleConfig.Count do
-        createParticle(backgroundContainer, config)
     end
-end
 
-function NotificationLib:ShowNotification(title, message)
     local notification = Instance.new("Frame")
-    notification.Name = "Notification"
-    notification.Size = self.Config.Size
-    notification.Position = UDim2.new(1, 20, 0, self.Config.Position.Y.Offset)
+    notification.Size = config.Size
+    notification.Position = UDim2.new(1, 20, 0, config.Position.Y.Offset)
     notification.AnchorPoint = Vector2.new(1, 0)
-    notification.BackgroundColor3 = self.Config.BackgroundColor
-    notification.BackgroundTransparency = self.Config.BackgroundTransparency
+    notification.BackgroundColor3 = config.BackgroundColor
+    notification.BackgroundTransparency = config.BackgroundTransparency
     notification.BorderSizePixel = 0
-    notification.ClipsDescendants = true
     notification.Parent = self.ScreenGui
-    
-    createAnimatedBackground(notification, self.Config)
-    
+
+    local uICorner = Instance.new("UICorner")
+    uICorner.CornerRadius = UDim.new(0, config.CornerRadius)
+    uICorner.Parent = notification
+
     local accentBar = Instance.new("Frame")
-    accentBar.Name = "AccentBar"
-    accentBar.Size = UDim2.new(1, 0, 1, 0)
-    accentBar.BackgroundColor3 = self.Config.AccentColor
+    accentBar.Size = UDim2.new(0, 4, 1, 0)
+    accentBar.BackgroundColor3 = config.AccentColor
     accentBar.BorderSizePixel = 0
     accentBar.Parent = notification
-    
-    local contentContainer = Instance.new("Frame")
-    contentContainer.Name = "ContentContainer"
-    contentContainer.Size = UDim2.new(1, 0, 1, 0)
-    contentContainer.BackgroundTransparency = 1
-    contentContainer.Parent = notification
-    
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "Title"
-    titleLabel.Size = UDim2.new(1, -40, 0, 20)
-    titleLabel.Position = UDim2.new(0, 20, 0, 15)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Font = self.Config.Font
-    titleLabel.TextSize = self.Config.TitleSize
-    titleLabel.TextColor3 = self.Config.TextColor
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Text = title
-    titleLabel.TextTransparency = 1
-    titleLabel.Parent = contentContainer
-    
-    local messageLabel = Instance.new("TextLabel")
-    messageLabel.Name = "Message"
-    messageLabel.Size = UDim2.new(1, -40, 1, -50)
-    messageLabel.Position = UDim2.new(0, 20, 0, 35)
-    messageLabel.BackgroundTransparency = 1
-    messageLabel.Font = self.Config.Font
-    messageLabel.TextSize = self.Config.MessageSize
-    messageLabel.TextColor3 = self.Config.TextColor
-    messageLabel.TextXAlignment = Enum.TextXAlignment.Left
-    messageLabel.TextYAlignment = Enum.TextYAlignment.Top
-    messageLabel.Text = message
-    messageLabel.TextWrapped = true
-    messageLabel.TextTransparency = 1
-    messageLabel.Parent = contentContainer
-    
-    local fixedAccentBar = Instance.new("Frame")
-    fixedAccentBar.Name = "FixedAccentBar"
-    fixedAccentBar.Size = UDim2.new(0, 4, 1, 0)
-    fixedAccentBar.BackgroundColor3 = self.Config.AccentColor
-    fixedAccentBar.BorderSizePixel = 0
-    fixedAccentBar.Visible = false
-    fixedAccentBar.Parent = notification
-    
+
+    local content = Instance.new("Frame")
+    content.Size = UDim2.new(1, -20, 1, 0)
+    content.Position = UDim2.new(0, 15, 0, 0)
+    content.BackgroundTransparency = 1
+    content.Parent = notification
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 30)
+    title.Position = UDim2.new(0, 0, 0, 10)
+    title.BackgroundTransparency = 1
+    title.Font = config.Font
+    title.TextSize = config.TitleSize
+    title.TextColor3 = config.TextColor
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Text = config.Title
+    title.TextTransparency = 1
+    title.Parent = content
+
+    local description = Instance.new("TextLabel")
+    description.Size = UDim2.new(1, 0, 1, -40)
+    description.Position = UDim2.new(0, 0, 0, 35)
+    description.BackgroundTransparency = 1
+    description.Font = config.Font
+    description.TextSize = config.DescriptionSize
+    description.TextColor3 = config.TextColor
+    description.TextXAlignment = Enum.TextXAlignment.Left
+    description.TextYAlignment = Enum.TextYAlignment.Top
+    description.Text = config.Description
+    description.TextWrapped = true
+    description.TextTransparency = 1
+    description.Parent = content
+
     local function animate()
-        local enterTween = TweenService:Create(notification, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            Position = self.Config.Position
+        local enterTween = TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+            Position = config.Position
         })
         enterTween:Play()
-        enterTween.Completed:Wait()
         
         task.wait(0.2)
         
-        fixedAccentBar.Visible = true
+        TweenService:Create(title, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
+        TweenService:Create(description, TweenInfo.new(0.3), {TextTransparency = 0.2}):Play()
         
-        local accentTween = TweenService:Create(accentBar, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
-            Size = UDim2.new(0, 4, 1, 0)
-        })
-        accentTween:Play()
+        task.wait(config.Duration)
         
-        task.wait(0.2)
-        
-        local textTween1 = TweenService:Create(titleLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            TextTransparency = 0
-        })   
-        local textTween2 = TweenService:Create(messageLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            TextTransparency = 0.2
-        })
-        textTween1:Play()
-        textTween2:Play()
-        accentTween.Completed:Wait()
-        accentBar:Destroy()
-        task.wait(self.Config.Duration)
-        local exitTween = TweenService:Create(notification, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+        local exitTween = TweenService:Create(notification, TweenInfo.new(0.3), {
             Position = UDim2.new(1, 20, notification.Position.Y.Scale, notification.Position.Y.Offset)
         })
         exitTween:Play()
