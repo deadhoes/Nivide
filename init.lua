@@ -18,7 +18,11 @@ NotificationLib.Styles = {
         DescriptionSize = 14,
         CornerRadius = 8,
         BorderSize = 1,
-        BorderColor = Color3.fromRGB(60, 60, 70)
+        BorderColor = Color3.fromRGB(60, 60, 70),
+        IconSize = 24,
+        IconColor = Color3.fromRGB(240, 240, 240),
+        IconTransparency = 0,
+        StackSpacing = 10
     }
 }
 
@@ -28,7 +32,7 @@ function NotificationLib.Init()
     self.ScreenGui.Name = "ModernNotificationGui"
     self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     self.ScreenGui.Parent = game:GetService("CoreGui")
-    self.NotificationQueue = {}
+    self.ActiveNotifications = {}
     return self
 end
 
@@ -59,9 +63,22 @@ function NotificationLib:AddNotification(options)
     accentBar.BorderSizePixel = 0
     accentBar.Parent = notification
 
+    local icon = Instance.new("ImageLabel")
+    icon.Size = UDim2.new(0, config.IconSize, 0, config.IconSize)
+    icon.Position = UDim2.new(0, 15, 0.5, 0)
+    icon.AnchorPoint = Vector2.new(0, 0.5)
+    icon.BackgroundTransparency = 1
+    icon.ImageColor3 = config.IconColor
+    icon.ImageTransparency = 1
+    icon.Parent = notification
+
+    if config.Icon then
+        icon.Image = "rbxassetid://"..config.Icon
+    end
+
     local content = Instance.new("Frame")
-    content.Size = UDim2.new(1, -20, 1, 0)
-    content.Position = UDim2.new(0, 15, 0, 0)
+    content.Size = UDim2.new(1, -(config.IconSize + 30), 1, 0)
+    content.Position = UDim2.new(0, config.IconSize + 25, 0, 0)
     content.BackgroundTransparency = 1
     content.Parent = notification
 
@@ -91,9 +108,17 @@ function NotificationLib:AddNotification(options)
     description.TextTransparency = 1
     description.Parent = content
 
+    -- Stack notifications
+    local totalHeight = 0
+    for _, notif in ipairs(self.ActiveNotifications) do
+        totalHeight += notif.Size.Y.Offset + config.StackSpacing
+    end
+    notification.Position = UDim2.new(1, 20, 0, config.Position.Y.Offset + totalHeight)
+    table.insert(self.ActiveNotifications, notification)
+
     local function animate()
         local enterTween = TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
-            Position = config.Position
+            Position = UDim2.new(1, -20, 0, config.Position.Y.Offset + totalHeight)
         })
         enterTween:Play()
         
@@ -101,14 +126,25 @@ function NotificationLib:AddNotification(options)
         
         TweenService:Create(title, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
         TweenService:Create(description, TweenInfo.new(0.3), {TextTransparency = 0.2}):Play()
+        if config.Icon then
+            TweenService:Create(icon, TweenInfo.new(0.3), {ImageTransparency = config.IconTransparency}):Play()
+        end
         
         task.wait(config.Duration)
         
         local exitTween = TweenService:Create(notification, TweenInfo.new(0.3), {
-            Position = UDim2.new(1, 20, notification.Position.Y.Scale, notification.Position.Y.Offset)
+            Position = UDim2.new(1, 20, 0, config.Position.Y.Offset + totalHeight)
         })
         exitTween:Play()
         exitTween.Completed:Wait()
+        
+        for i, notif in ipairs(self.ActiveNotifications) do
+            if notif == notification then
+                table.remove(self.ActiveNotifications, i)
+                break
+            end
+        end
+        
         notification:Destroy()
     end
     
